@@ -305,13 +305,15 @@ export async function handleBusinessApi(req, res, url, db, bodyJson, audit) {
       db.prepare('INSERT INTO customers(id, name, phone, notes, credit_limit_minor) VALUES(?,?,?,?,?)')
         .run(cid, name, text(b.phone, 40), text(b.notes, 1000), integer(b.credit_limit_minor ?? 0, 'Credit limit'));
       audit(db, 'customer', cid, 'created', { name });
-      return json(res, 201, db.prepare('SELECT * FROM customers WHERE id=?').get(cid));
+      const row = db.prepare('SELECT * FROM customers WHERE id=?').get(cid);
+      return json(res, 201, { ...row, balance_minor: 0 });
     }
 
     if (path === '/api/credits' && method === 'POST') {
       const b = await bodyJson(req);
       const cid = text(b.customer_id, 80);
-      const type = text(b.entry_type, 20);
+      const rawType = text(b.entry_type, 20);
+      const type = rawType === 'repayment' ? 'payment' : rawType;
       const amount = integer(b.amount_minor, 'Amount', { min: 1 });
       const customer = db.prepare('SELECT id, name FROM customers WHERE id=?').get(cid);
       if (!customer) throw new Error('Customer not found.');
