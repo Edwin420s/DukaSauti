@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#183d32"><meta name="description" content="Offline-first shop records assistant.">
+  <title>DukaSauti — Shop records, understood</title><link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="#today"><span class="brand-mark">D</span><span><b>DukaSauti</b><small>SHOPKEEPER'S DESK</small></span></a>
+    <div class="shop-chip"><span class="shop-dot"></span><span id="shopNameSide">My Shop</span><span class="local-pill">LOCAL</span></div>
+    <nav aria-label="Main navigation">
+      <button class="nav-item active" data-page="today"><span>◫</span> Today</button>
+      <button class="nav-item" data-page="entry"><span>＋</span> Sauti entry</button>
+      <button class="nav-item" data-page="ledger"><span>▤</span> Ledger</button>
+      <button class="nav-item" data-page="reconcile"><span>◎</span> Close the day</button>
+      <button class="nav-item" data-page="settings"><span>⚙</span> Shop settings</button>
+    </nav>
+    <div class="sidebar-bottom"><div class="offline-card"><span class="status-dot"></span><div><b>Local-first mode</b><small id="aiStatusSide">AI model not loaded</small></div></div><small class="version">DUKASAUTI 0.1.0 · EARLY BUILD</small></div>
+  </aside>
+  <main class="main">
+    <header class="topbar"><div><p class="eyebrow" id="dateLabel">YOUR BUSINESS, TODAY</p><h1 id="pageTitle">Good morning.</h1></div><div class="top-actions"><span class="connection"><i></i><span>Local data</span></span><button class="button button-dark" id="quickEntry">＋ Record activity</button></div></header>
+    <div id="notice" class="notice hidden" role="status"></div>
+
+    <section class="page active" id="page-today">
+      <div class="welcome-row"><div><h2>Keep the day clear.</h2><p>These numbers come from confirmed records only.</p></div><span class="date-chip" id="todayDate"></span></div>
+      <div class="metric-grid">
+        <article class="metric-card"><div class="metric-label">Recorded sales <span>↗</span></div><strong id="salesMetric">KSh 0.00</strong><small id="salesSub">Confirmed sales today</small></article>
+        <article class="metric-card"><div class="metric-label">Cash received <span>↓</span></div><strong id="cashInMetric">KSh 0.00</strong><small>Recorded cash inflows</small></article>
+        <article class="metric-card"><div class="metric-label">Expenses recorded <span>↗</span></div><strong id="expensesMetric">KSh 0.00</strong><small>Operating expenses recorded</small></article>
+        <article class="metric-card metric-highlight"><div class="metric-label">Needs attention <span>!</span></div><strong id="attentionMetric">0</strong><small>Drafts or unresolved details</small></article>
+      </div>
+      <div class="content-grid">
+        <article class="panel"><div class="panel-head"><div><h3>Recent activity</h3><p>Your latest confirmed records</p></div><button class="text-button" data-goto="ledger">View ledger →</button></div><div id="recentList" class="activity-list"><div class="empty-state">No transactions yet. Record your first activity.</div></div></article>
+        <article class="panel sauti-panel"><div class="sauti-orb">S</div><p class="eyebrow">SAUTI ASSISTANT</p><h3>Write it as it happened.</h3><p class="muted">Describe a sale, purchase or expense in plain English. Review the proposed record before it enters your ledger.</p><button class="button button-green full" data-goto="entry">Record with Sauti <span>→</span></button><div class="mini-note"><span>✳</span> AI interpretation is a draft, not a financial fact.</div></article>
+      </div>
+      <article class="panel bottom-panel"><div class="panel-head"><div><h3>End-of-day check</h3><p>Reconcile the cash you expect with what you count.</p></div><button class="button button-outline" data-goto="reconcile">Close the day →</button></div><div class="reconcile-teaser"><div><small>Opening cash</small><b id="openingCashTeaser">KSh 0.00</b></div><div><small>Cash expected</small><b id="expectedCashTeaser">Not reconciled</b></div><div><small>Last count</small><b id="lastCountTeaser">No count yet</b></div></div></article>
+    </section>
+
+    <section class="page" id="page-entry">
+      <div class="section-intro"><p class="eyebrow">SAUTI ENTRY</p><h2>What happened in the shop?</h2><p>Write a note in English. Local AI can interpret it when QVAC is installed and the model is loaded. You can always record a transaction manually.</p></div>
+      <div class="entry-layout"><article class="panel entry-panel"><label for="noteInput">Business note</label><textarea id="noteInput" rows="4" maxlength="5000" placeholder="e.g. Sold flour for KSh 300. Customer paid KSh 200 cash and owes KSh 100."></textarea><div class="entry-meta"><span>Keep customer details private.</span><span id="charCount">0 / 5,000</span></div><div class="example-chips"><button class="chip" data-example="Sold 4 packets of flour for KSh 600. Customer paid KSh 600 cash.">Sale</button><button class="chip" data-example="Spent KSh 150 on transport.">Expense</button><button class="chip" data-example="Bought stock for KSh 800 and paid cash.">Stock purchase</button></div><div class="entry-actions"><button class="button button-green" id="interpretBtn">Interpret with QVAC <span>→</span></button><button class="button button-outline" id="manualBtn">Enter manually</button></div><div id="qvacWarning" class="inline-warning hidden"></div></article><aside class="panel guidance-panel"><div class="guidance-icon">✳</div><h3>How Sauti works</h3><ol><li><b>Describe</b><span>Write what happened, using your own words.</span></li><li><b>Review</b><span>Check the proposed type, amount and payment.</span></li><li><b>Confirm</b><span>Only confirmed entries are included in reports.</span></li></ol><div class="privacy-note"><b>Offline by design</b><p>Business notes are sent only to the local QVAC runtime. If QVAC is not available, use manual entry; the app will not pretend a fallback parser is AI.</p></div></aside></div>
+      <div id="proposalArea" class="proposal-area hidden"></div>
+    </section>
+
+    <section class="page" id="page-ledger">
+      <div class="section-intro section-row"><div><p class="eyebrow">BUSINESS LEDGER</p><h2>Every record, in one place.</h2><p>Confirmed records only by default. Reversed entries remain visible when you change the filter.</p></div><a class="button button-outline" href="/api/export.csv">↓ Export CSV</a></div>
+      <article class="panel"><div class="filters"><input id="searchInput" type="search" placeholder="Search descriptions…"><input id="filterDate" type="date" aria-label="Filter by date"><select id="statusFilter" aria-label="Transaction status"><option value="confirmed">Confirmed</option><option value="all">All statuses</option><option value="draft">Drafts</option><option value="reversed">Reversed</option></select><button class="button button-outline" id="filterBtn">Apply</button></div><div class="table-wrap"><table><thead><tr><th>Date</th><th>Activity</th><th>Type</th><th>Payment</th><th class="right">Amount</th><th>Status</th><th></th></tr></thead><tbody id="ledgerBody"><tr><td colspan="7" class="empty-cell">No records yet.</td></tr></tbody></table></div></article>
+    </section>
+
+    <section class="page" id="page-reconcile">
+      <div class="section-intro"><p class="eyebrow">CASH RECONCILIATION</p><h2>Close the day with clarity.</h2><p>Compare your recorded cash movement with the physical cash you count. A difference is a prompt to investigate—not proof of a loss.</p></div>
+      <div class="reconcile-layout"><article class="panel"><div class="panel-head"><div><h3>Today's cash position</h3><p id="reconcileDateLabel"></p></div></div><div class="cash-breakdown"><div><span>Opening cash</span><b id="openingCashValue">KSh 0.00</b></div><div><span>Recorded cash in</span><b id="cashInValue">KSh 0.00</b></div><div><span>Recorded cash out</span><b id="cashOutValue">KSh 0.00</b></div><div class="cash-total"><span>Expected cash</span><b id="expectedCashValue">KSh 0.00</b></div></div><form id="reconcileForm"><label for="countedCash">Physical cash counted (KSh)</label><input id="countedCash" inputmode="decimal" placeholder="e.g. 2600.00" required><label for="reconcileNotes">Notes (optional)</label><textarea id="reconcileNotes" rows="2" placeholder="Anything to review…"></textarea><button class="button button-green full" type="submit">Compare cash count</button></form><div id="reconcileResult" class="reconcile-result hidden"></div></article><article class="panel"><div class="panel-head"><div><h3>Previous counts</h3><p>Saved reconciliation history</p></div></div><div id="reconcileHistory" class="activity-list"><div class="empty-state">No counts recorded yet.</div></div></article></div>
+    </section>
+
+    <section class="page" id="page-settings">
+      <div class="section-intro"><p class="eyebrow">SHOP SETTINGS</p><h2>Your shop, your records.</h2><p>Set the name and opening cash used by the local ledger and cash reconciliation.</p></div>
+      <article class="panel settings-panel"><form id="settingsForm"><label for="shopName">Shop name</label><input id="shopName" maxlength="120" required><label for="openingCash">Opening cash (KSh)</label><input id="openingCash" inputmode="decimal" required><p class="field-help">This is the starting cash balance used in reconciliation. Do not enter daily sales here.</p><label>Currency</label><input value="Kenyan shilling (KES)" disabled><label>Timezone</label><input value="Africa/Nairobi (EAT, UTC+3)" disabled><button class="button button-green" type="submit">Save shop settings</button></form><div class="settings-divider"></div><h3>Local AI status</h3><div id="qvacSettingsStatus" class="model-status"></div><button class="button button-outline" id="loadModelBtn">Load QVAC model</button><p class="field-help">The first model load requires a download. For the AI Yako proof, load the model before disconnecting the internet, then test inference with the network off.</p><div class="settings-divider"></div><h3>Data portability</h3><p class="muted">Export confirmed transactions to CSV. Protect exported files: they may contain business-sensitive information.</p><a class="button button-outline" href="/api/export.csv">↓ Download transaction CSV</a></article>
+    </section>
+    <footer><span>DukaSauti <b>·</b> Local-first shop records</span><span>AI interprets. Business logic verifies. The owner decides.</span></footer>
+  </main>
+  <dialog id="manualDialog"><form id="manualForm" method="dialog"><div class="dialog-head"><div><p class="eyebrow">MANUAL ENTRY</p><h2>Record activity</h2></div><button class="icon-button" value="cancel" aria-label="Close">×</button></div><label for="manualType">Transaction type</label><select id="manualType" required><option value="sale">Sale</option><option value="expense">Expense</option><option value="stock_purchase">Stock purchase</option><option value="customer_payment">Customer payment</option><option value="supplier_payment">Supplier payment</option><option value="cash_withdrawal">Cash withdrawal</option><option value="cash_deposit">Cash deposit</option><option value="refund">Refund</option><option value="adjustment">Adjustment (review carefully)</option></select><label for="manualDescription">Description</label><input id="manualDescription" maxlength="500" required placeholder="e.g. Flour sale"><label for="manualAmount">Amount (KSh)</label><input id="manualAmount" inputmode="decimal" required placeholder="0.00"><label for="manualPayment">Payment method</label><select id="manualPayment"><option value="cash">Cash</option><option value="mobile_money">Mobile money</option><option value="bank">Bank</option><option value="credit">Credit</option><option value="mixed">Mixed</option><option value="other">Other</option><option value="none">Not applicable / unknown</option></select><div id="manualSaleAllocation" class="two-fields"><div><label for="manualCashReceived">Cash received (KSh)</label><input id="manualCashReceived" inputmode="decimal" placeholder="0.00"></div><div><label for="manualCredit">Credit amount (KSh)</label><input id="manualCredit" inputmode="decimal" placeholder="0.00"></div></div><label for="manualDate">Business date</label><input id="manualDate" type="date" required><label for="manualNotes">Notes (optional)</label><textarea id="manualNotes" rows="2"></textarea><div class="dialog-actions"><button class="button button-outline" value="cancel">Cancel</button><button class="button button-green" id="saveManualBtn" type="submit">Save confirmed record</button></div></form></dialog>
+  <script src="/app.js" type="module"></script>
+</body></html>

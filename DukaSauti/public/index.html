@@ -1,0 +1,1223 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#183d32">
+  <meta name="description" content="Offline-first operating desk and retail POS for Kenyan dukas and small businesses.">
+  <title>DukaSauti — Shopkeeper's Desk & POS</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <!-- SIDEBAR NAVIGATION -->
+  <aside class="sidebar">
+    <a class="brand" href="#today">
+      <span class="brand-mark">D</span>
+      <span>
+        <b>DukaSauti</b>
+        <small>SHOPKEEPER'S DESK</small>
+      </span>
+    </a>
+    <div class="shop-chip">
+      <span class="shop-dot"></span>
+      <span id="shopNameSide">My Shop</span>
+      <span class="local-pill">OFFLINE READY</span>
+    </div>
+    <nav aria-label="Main navigation">
+      <button class="nav-item active" data-page="today"><span>◫</span> Today</button>
+      <button class="nav-item" data-page="checkout"><span>🛒</span> POS Checkout</button>
+      <button class="nav-item" data-page="entry"><span>＋</span> Sauti Entry</button>
+      <button class="nav-item" data-page="ledger"><span>▤</span> Transactions</button>
+      <button class="nav-item" data-page="inventory"><span>▦</span> Stock & Inventory</button>
+      <button class="nav-item" data-page="customers"><span>♙</span> Customers & Credit</button>
+      <button class="nav-item" data-page="suppliers"><span>▣</span> Suppliers & Bills</button>
+      <button class="nav-item" data-page="mpesa"><span>📱</span> M-Pesa Matcher</button>
+      <button class="nav-item" data-page="reports"><span>▥</span> Performance & COGS</button>
+      <button class="nav-item" data-page="journals"><span>≡</span> General Ledger</button>
+      <button class="nav-item" data-page="reconcile"><span>◎</span> Close Shift</button>
+      <button class="nav-item" data-page="settings"><span>⚙</span> Settings & Backup</button>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="offline-card">
+        <span class="status-dot"></span>
+        <div>
+          <b>Local-first mode</b>
+          <small id="aiStatusSide">AI model checking…</small>
+        </div>
+      </div>
+      <small class="version">DUKASAUTI 0.2.0 · PRODUCTION DESK</small>
+    </div>
+  </aside>
+
+  <!-- MAIN VIEWPORT -->
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow" id="dateLabel">YOUR BUSINESS, TODAY</p>
+        <h1 id="pageTitle">Good morning.</h1>
+      </div>
+      <div class="top-actions">
+        <span class="connection"><i></i><span>Local SQLite</span></span>
+        <button class="button button-outline" id="langToggleBtn" title="Badilisha lugha">🇰🇪 Kiswahili</button>
+        <button class="button button-outline" id="staffModeBtn">👑 Owner Mode</button>
+        <button class="button button-outline" id="quickCheckoutBtn">🛒 Open POS</button>
+        <button class="button button-dark" id="quickEntry">⚡ Quick Entry <kbd>N</kbd></button>
+      </div>
+    </header>
+
+    <div id="notice" class="notice hidden" role="status"></div>
+
+    <!-- ========================================== -->
+    <!-- 1. TODAY DASHBOARD                         -->
+    <!-- ========================================== -->
+    <section class="page active" id="page-today">
+      <div class="welcome-row">
+        <div>
+          <h2>Today's Operating Overview</h2>
+          <p>Confirmed sales, cash collections, and inventory metrics from your local desk.</p>
+        </div>
+        <span class="date-chip" id="todayDate"></span>
+      </div>
+      <div class="metric-grid">
+        <article class="metric-card">
+          <div class="metric-label">Recorded Sales <span>↗</span></div>
+          <strong id="salesMetric" class="pos-num">KSh 0.00</strong>
+          <small id="salesSub">0 confirmed sales</small>
+        </article>
+        <article class="metric-card">
+          <div class="metric-label">Cash Received <span>↓</span></div>
+          <strong id="cashInMetric">KSh 0.00</strong>
+          <small id="cashInSub">Physical cash in drawer</small>
+        </article>
+        <article class="metric-card">
+          <div class="metric-label">M-Pesa Received <span>📱</span></div>
+          <strong id="mpesaMetric">KSh 0.00</strong>
+          <small>Mobile money collections</small>
+        </article>
+        <article class="metric-card">
+          <div class="metric-label">Operating Expenses <span>↘</span></div>
+          <strong id="expensesMetric" class="neg-num">KSh 0.00</strong>
+          <small id="expensesSub">Daily shop overheads</small>
+        </article>
+      </div>
+
+      <div class="content-grid">
+        <article class="panel">
+          <div class="panel-head">
+            <div>
+              <h3>Recent Activity</h3>
+              <p>Latest confirmed sales, payments and expenses</p>
+            </div>
+            <button class="text-button" data-goto="ledger">View all transactions →</button>
+          </div>
+          <div id="recentList" class="activity-list">
+            <div class="empty-state">No transactions recorded today. Use Quick Entry or POS.</div>
+          </div>
+        </article>
+
+        <article class="panel sauti-panel">
+          <div class="sauti-orb">S</div>
+          <p class="eyebrow">SMART SHOP ASSISTANT</p>
+          <h3>Record activity in plain language.</h3>
+          <p class="muted">Speak or type naturally: "Sold 3 bags of sugar for 450 cash" or "Paid 800 electricity token via M-Pesa". QVAC interprets offline.</p>
+          <button class="button button-green full" data-goto="entry">Open Sauti Assistant <span>→</span></button>
+          <div class="mini-note">
+            <span>✳</span> AI generates verified drafts. The shopkeeper confirms every shilling.
+          </div>
+        </article>
+      </div>
+
+      <!-- STOKA-INSPIRED SHIFT TEASER -->
+      <article class="panel bottom-panel">
+        <div class="panel-head">
+          <div>
+            <h3>Counter Float & Shift Balance</h3>
+            <p>End-of-day cash drawer reconciliation inspired by retail best practices</p>
+          </div>
+          <button class="button button-outline" data-goto="reconcile">Close Current Shift →</button>
+        </div>
+        <div class="reconcile-teaser">
+          <div>
+            <small>Opening Counter Float</small>
+            <b id="openingCashTeaser">KSh 0.00</b>
+          </div>
+          <div>
+            <small>Expected in Counter</small>
+            <b id="expectedCashTeaser">KSh 0.00</b>
+          </div>
+          <div>
+            <small>Last Reconciliation Status</small>
+            <b id="lastCountTeaser">Ready to reconcile</b>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 2. MULTI-ITEM POS CHECKOUT (TOKO TETANGGA) -->
+    <!-- ========================================== -->
+    <section class="page" id="page-checkout">
+      <div class="section-intro section-row">
+        <div>
+          <p class="eyebrow">RETAIL CHECKOUT</p>
+          <h2>Point of Sale (POS)</h2>
+          <p>Scan barcode or search products. Add multiple items to the cart, split tender across Cash, M-Pesa, Bank, and Credit.</p>
+        </div>
+        <div class="pos-top-actions">
+          <button class="button button-outline" id="clearCartBtn">Clear Cart</button>
+        </div>
+      </div>
+
+      <div class="pos-layout">
+        <!-- PRODUCT CATALOG BROWSER -->
+        <div class="pos-catalog">
+          <div class="pos-search-bar">
+            <input type="search" id="posSearchInput" placeholder="🔍 Search product by name, SKU or scan barcode…">
+            <select id="posCategoryFilter">
+              <option value="all">All Categories</option>
+            </select>
+          </div>
+          <div id="posProductGrid" class="pos-product-grid">
+            <div class="empty-state">Loading products catalogue…</div>
+          </div>
+        </div>
+
+        <!-- ACTIVE CART & TENDER ALLOCATION -->
+        <div class="pos-cart-panel panel">
+          <div class="cart-header">
+            <h3>Current Sale Items</h3>
+            <span class="cart-count-badge" id="cartCountBadge">0 items</span>
+          </div>
+
+          <div class="cart-items-wrap">
+            <div id="cartItemsList" class="cart-items-list">
+              <div class="empty-cart-message">
+                <span style="font-size:32px;">🛒</span>
+                <p>Cart is empty.<br>Click any product on the left to add.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="cart-summary">
+            <div class="summary-line">
+              <span>Items Total (<span id="cartItemsQty">0</span> pcs)</span>
+              <strong id="cartSubtotal">KSh 0.00</strong>
+            </div>
+            <div class="summary-line highlight-total">
+              <span>Grand Total</span>
+              <strong id="cartTotal">KSh 0.00</strong>
+            </div>
+
+            <!-- PAYMENT SPLIT ALLOCATION -->
+            <div class="tender-section">
+              <label class="tender-title">Payment Tender Allocation</label>
+              <div class="tender-quick-buttons">
+                <button type="button" class="chip" id="exactCashBtn">Exact Cash</button>
+                <button type="button" class="chip" id="exactMpesaBtn">Exact M-Pesa</button>
+                <button type="button" class="chip" id="halfSplitBtn">50/50 Cash & M-Pesa</button>
+              </div>
+
+              <div class="tender-grid">
+                <div>
+                  <label for="posCash">💵 Cash</label>
+                  <input type="number" id="posCash" min="0" step="0.01" value="0">
+                </div>
+                <div>
+                  <label for="posMpesa">📱 M-Pesa</label>
+                  <input type="number" id="posMpesa" min="0" step="0.01" value="0">
+                </div>
+                <div>
+                  <label for="posBank">🏦 Bank</label>
+                  <input type="number" id="posBank" min="0" step="0.01" value="0">
+                </div>
+                <div>
+                  <label for="posCredit">💳 Credit (Deni)</label>
+                  <input type="number" id="posCredit" min="0" step="0.01" value="0">
+                </div>
+              </div>
+
+              <div id="posCustomerSelectWrap" class="tender-customer-select hidden">
+                <label for="posCustomer">Customer Account (Required for credit)</label>
+                <select id="posCustomer">
+                  <option value="">-- Choose Customer --</option>
+                </select>
+                <small id="customerCreditNotice" class="field-help"></small>
+              </div>
+
+              <div class="tender-balance-check" id="tenderBalanceCheck">
+                <span>Remaining to Allocate:</span>
+                <b id="tenderRemainingAmount">KSh 0.00</b>
+              </div>
+            </div>
+
+            <button type="button" class="button button-green full" id="completeCheckoutBtn" disabled>
+              Complete Sale & Print Receipt ➔
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 3. SAUTI AI & MANUAL ENTRY                 -->
+    <!-- ========================================== -->
+    <section class="page" id="page-entry">
+      <div class="section-intro">
+        <p class="eyebrow">OFFLINE SMART ASSISTANT</p>
+        <h2>What happened in the shop?</h2>
+        <p>Type or paste in plain English or Swahili. Local QVAC extracts amounts, categories, and payment types offline.</p>
+      </div>
+      <div class="entry-layout">
+        <article class="panel entry-panel">
+          <label for="noteInput">Shop Note</label>
+          <textarea id="noteInput" rows="4" maxlength="5000" placeholder="e.g. Sold 5 bags of rice for 1500 cash. Paid transport 200 via M-Pesa. Customer Mwangi took milk on credit 120."></textarea>
+          <div class="entry-meta">
+            <span>Runs fully offline on your device.</span>
+            <span id="charCount">0 / 5,000</span>
+          </div>
+          <div class="example-chips">
+            <button class="chip" data-example="Sold 4 packets of maize flour for KSh 600. Customer paid KSh 600 cash.">Cash Sale</button>
+            <button class="chip" data-example="Customer Kamau bought groceries for KSh 1,200. Paid 700 via M-Pesa and 500 on credit.">M-Pesa + Credit</button>
+            <button class="chip" data-example="Paid electricity tokens KSh 400 via M-Pesa for shop utilities.">Utilities Expense</button>
+            <button class="chip" data-example="Restocked cooking oil 10 litres for KSh 3,200 from Bidco Ltd.">Stock Restock</button>
+          </div>
+          <div class="entry-actions">
+            <button class="button button-green" id="interpretBtn">Interpret with QVAC <span>→</span></button>
+            <button class="button button-outline" id="voiceRecordBtn">🎙️ Speak Note</button>
+            <button class="button button-outline" id="manualBtn">Enter Manually</button>
+          </div>
+          <div id="qvacWarning" class="inline-warning hidden"></div>
+        </article>
+
+        <aside class="panel guidance-panel">
+          <div class="guidance-icon">✳</div>
+          <h3>How Sauti Works</h3>
+          <ol>
+            <li><b>Describe</b><span>Write what occurred in everyday words.</span></li>
+            <li><b>Review</b><span>Verify amounts, product quantities, and tender split.</span></li>
+            <li><b>Confirm</b><span>Every transaction is saved locally to your ledger and audited.</span></li>
+          </ol>
+          <div class="privacy-note">
+            <b>100% On-Device Privacy</b>
+            <p>Your shop financial records never leave this computer. No internet required for local inference.</p>
+          </div>
+        </aside>
+      </div>
+      <div id="proposalArea" class="proposal-area hidden"></div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 4. BUSINESS LEDGER & TRANSACTIONS (FINOPIA)-->
+    <!-- ========================================== -->
+    <section class="page" id="page-ledger">
+      <div class="section-intro section-row">
+        <div>
+          <p class="eyebrow">TRANSACTION LOG</p>
+          <h2>All Business Records</h2>
+          <p>Every confirmed sale, expense, payment, and credit movement in chronological order.</p>
+        </div>
+        <div class="ledger-actions">
+          <a class="button button-outline" href="/api/export.csv">↓ Export CSV</a>
+        </div>
+      </div>
+      <article class="panel">
+        <div class="filters">
+          <input id="searchInput" type="search" placeholder="Search description, category, notes…">
+          <input id="filterDate" type="date" aria-label="Filter by date">
+          <select id="statusFilter" aria-label="Transaction status">
+            <option value="confirmed">Confirmed Only</option>
+            <option value="all">All Statuses</option>
+            <option value="draft">Drafts</option>
+            <option value="reversed">Reversed</option>
+          </select>
+          <button class="button button-outline" id="filterBtn">Apply Filters</button>
+        </div>
+        <div class="table-wrap">
+          <table class="finopia-table">
+            <thead>
+              <tr>
+                <th>Date & Time</th>
+                <th>Activity Description</th>
+                <th>Category</th>
+                <th>Tender Method</th>
+                <th class="right">Amount</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="ledgerBody">
+              <tr><td colspan="7" class="empty-cell">Loading records…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 5. STOCK CONTROL & INVENTORY               -->
+    <!-- ========================================== -->
+    <section class="page" id="page-inventory">
+      <div class="section-intro">
+        <p class="eyebrow">STOCK CONTROL</p>
+        <h2>Inventory & Products</h2>
+        <p>Monitor on-hand stock quantities, cost prices, selling margins, and stock reorder levels.</p>
+      </div>
+      <div class="module-grid">
+        <article class="panel">
+          <h3>Add New Product</h3>
+          <form id="productForm">
+            <label>Product Name</label>
+            <input name="name" required maxlength="160" placeholder="e.g. Unga Pembe 2kg">
+            <label>SKU / Barcode</label>
+            <input name="sku" placeholder="e.g. 616110123456">
+            <div class="two-fields">
+              <div>
+                <label>Unit of Measure</label>
+                <input name="unit" value="piece" placeholder="piece, kg, litre, pkt">
+              </div>
+              <div>
+                <label>Category</label>
+                <input name="category" placeholder="e.g. Cereals, Drinks, Soap">
+              </div>
+            </div>
+            <div class="two-fields">
+              <div>
+                <label>Selling Price (KSh)</label>
+                <input name="selling" type="number" min="0" step="0.01" required placeholder="0.00">
+              </div>
+              <div>
+                <label>Cost Price (KSh)</label>
+                <input name="cost" type="number" min="0" step="0.01" required placeholder="0.00">
+              </div>
+            </div>
+            <div class="two-fields">
+              <div>
+                <label>Opening Quantity</label>
+                <input name="qty" type="number" min="0" step="0.001" value="0">
+              </div>
+              <div>
+                <label>Reorder Alert Level</label>
+                <input name="reorder" type="number" min="0" step="0.001" value="5">
+              </div>
+            </div>
+            <button class="button button-green" type="submit">Save Product</button>
+          </form>
+        </article>
+
+        <article class="panel">
+          <h3>Record Stock Movement</h3>
+          <form id="stockForm">
+            <label>Select Product</label>
+            <select name="product_id" id="stockProduct" required></select>
+            <label>Movement Reason</label>
+            <select name="movement_type">
+              <option value="purchase">Purchase / Restock</option>
+              <option value="return">Customer Return</option>
+              <option value="damage">Damage / Expired / Write-off</option>
+              <option value="adjustment">Stock Count Adjustment</option>
+            </select>
+            <div class="two-fields">
+              <div>
+                <label>Quantity</label>
+                <input name="quantity" type="number" min="0.001" step="0.001" required placeholder="1">
+              </div>
+              <div>
+                <label>Unit Cost (KSh)</label>
+                <input name="cost" type="number" min="0" step="0.01" value="0">
+              </div>
+            </div>
+            <label>Reference / Supplier Note</label>
+            <input name="notes" placeholder="e.g. Restock invoice #892">
+            <button class="button button-outline" type="submit">Record Stock Movement</button>
+          </form>
+        </article>
+
+        <article class="panel" style="grid-column: span 2;">
+          <h3>📦 Unpack Bulk Stock (e.g. Crate ➔ Pieces, Carton ➔ Packets)</h3>
+          <form id="unpackForm" class="two-fields" style="align-items:flex-end;">
+            <div>
+              <label>Source Bulk Product</label>
+              <select name="from_product_id" id="unpackSourceProduct" required></select>
+            </div>
+            <div>
+              <label>Target Retail Product</label>
+              <select name="to_product_id" id="unpackTargetProduct" required></select>
+            </div>
+            <div>
+              <label>Unpack Quantity (Bulk Units)</label>
+              <input name="quantity" type="number" min="0.001" step="1" value="1" required>
+            </div>
+            <div>
+              <label>Units per Bulk Pack (e.g. 24 for Crate, 12 for Carton)</label>
+              <input name="factor" type="number" min="1" step="1" value="24" required>
+            </div>
+            <div style="grid-column: span 2;">
+              <button class="button button-green full" type="submit">Execute Stock Unpack & Update Shelves ➔</button>
+            </div>
+          </form>
+        </article>
+      </div>
+
+      <article class="panel">
+        <div class="panel-head">
+          <div>
+            <h3>Product Catalogue & Shelf Levels</h3>
+            <p>Products with low stock are flagged in orange</p>
+          </div>
+          <div class="stock-summary-pill" id="inventoryValuationBadge">Inventory Value: KSh 0.00</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Product Name</th>
+                <th>SKU</th>
+                <th>Category</th>
+                <th>On Hand</th>
+                <th>Reorder At</th>
+                <th>Cost</th>
+                <th>Selling</th>
+                <th>Margin</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="productsBody"></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 6. CUSTOMER DIRECTORY & CREDIT (DENI)      -->
+    <!-- ========================================== -->
+    <section class="page" id="page-customers">
+      <div class="section-intro">
+        <p class="eyebrow">CUSTOMER ACCOUNTS</p>
+        <h2>Customer Credit & Repayments</h2>
+        <p>Keep clear records of customer debt (deni) and record repayments via Cash, M-Pesa, or Bank.</p>
+      </div>
+      <div class="module-grid">
+        <article class="panel">
+          <h3>Add Customer Account</h3>
+          <form id="customerForm">
+            <label>Customer Full Name</label>
+            <input name="name" required placeholder="e.g. Mama Kevin">
+            <label>Phone Number (Saf/Airtel)</label>
+            <input name="phone" placeholder="e.g. 0712345678">
+            <label>Credit Limit (KSh, 0 = unlimited)</label>
+            <input name="limit" type="number" min="0" step="0.01" value="5000">
+            <label>Notes / Landmark</label>
+            <input name="notes" placeholder="e.g. Green gate opposite primary school">
+            <button class="button button-green" type="submit">Save Customer</button>
+          </form>
+        </article>
+
+        <article class="panel">
+          <h3>Post Account Repayment or Charge</h3>
+          <form id="creditForm">
+            <label>Select Customer</label>
+            <select name="customer_id" id="creditCustomer" required></select>
+            <label>Entry Type</label>
+            <select name="entry_type">
+              <option value="payment">Customer Repayment (Reduces Debt)</option>
+              <option value="charge">New Debt Charge (Increases Debt)</option>
+              <option value="adjustment">Balance Adjustment</option>
+            </select>
+            <div class="two-fields">
+              <div>
+                <label>Amount (KSh)</label>
+                <input name="amount" type="number" min="0.01" step="0.01" required placeholder="0.00">
+              </div>
+              <div>
+                <label>Payment Method (if repayment)</label>
+                <select name="payment_method">
+                  <option value="cash">Cash</option>
+                  <option value="mobile_money">M-Pesa</option>
+                  <option value="bank">Bank</option>
+                </select>
+              </div>
+            </div>
+            <label>Notes</label>
+            <input name="notes" placeholder="e.g. Partial repayment via Till">
+            <button class="button button-outline" type="submit">Save Account Entry</button>
+          </form>
+        </article>
+      </div>
+
+      <article class="panel">
+        <div class="panel-head">
+          <div>
+            <h3>Customer Balances</h3>
+            <p>Customers with unpaid debt are listed with their active balances</p>
+          </div>
+          <div class="stock-summary-pill" id="totalCustomerDebtBadge">Total Outstanding: KSh 0.00</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Customer Name</th>
+                <th>Phone Number</th>
+                <th>Credit Limit</th>
+                <th>Outstanding Debt</th>
+                <th>Status</th>
+                <th>Statement</th>
+              </tr>
+            </thead>
+            <tbody id="customersBody"></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 7. SUPPLIERS & BILLS                       -->
+    <!-- ========================================== -->
+    <section class="page" id="page-suppliers">
+      <div class="section-intro">
+        <p class="eyebrow">SUPPLIER DESK</p>
+        <h2>Suppliers & Bills Payable</h2>
+        <p>Track wholesale suppliers, invoices, and partial payments.</p>
+      </div>
+      <div class="module-grid">
+        <article class="panel">
+          <h3>Add Supplier</h3>
+          <form id="supplierForm">
+            <label>Supplier / Company Name</label>
+            <input name="name" required placeholder="e.g. Broadway Bakery">
+            <div class="two-fields">
+              <div>
+                <label>Phone Number</label>
+                <input name="phone" placeholder="e.g. 0722000000">
+              </div>
+              <div>
+                <label>Email Address</label>
+                <input name="email" type="email" placeholder="orders@broadway.co.ke">
+              </div>
+            </div>
+            <label>Notes</label>
+            <input name="notes" placeholder="e.g. Delivers every Tuesday morning">
+            <button class="button button-green" type="submit">Save Supplier</button>
+          </form>
+        </article>
+
+        <article class="panel">
+          <h3>Record Supplier Bill</h3>
+          <form id="billForm">
+            <label>Select Supplier</label>
+            <select name="supplier_id" id="billSupplier" required></select>
+            <div class="two-fields">
+              <div>
+                <label>Invoice / Reference #</label>
+                <input name="reference" placeholder="e.g. INV-9042">
+              </div>
+              <div>
+                <label>Due Date</label>
+                <input name="due_date" type="date">
+              </div>
+            </div>
+            <label>Total Bill Amount (KSh)</label>
+            <input name="amount" type="number" min="0.01" step="0.01" required placeholder="0.00">
+            <label>Notes</label>
+            <input name="notes" placeholder="e.g. Stock shipment received">
+            <button class="button button-outline" type="submit">Record Bill</button>
+          </form>
+        </article>
+
+        <article class="panel" style="grid-column: span 2;">
+          <h3>Pay a Supplier Bill</h3>
+          <form id="billPaymentForm" class="two-fields" style="align-items:flex-end;">
+            <div>
+              <label>Select Outstanding Bill</label>
+              <select name="bill_id" id="billPaymentSelect" required></select>
+            </div>
+            <div>
+              <label>Payment Amount (KSh)</label>
+              <input name="amount" type="number" min="0.01" step="0.01" required placeholder="0.00">
+            </div>
+            <div>
+              <label>Payment Method</label>
+              <select name="payment_method">
+                <option value="cash">Cash</option>
+                <option value="mobile_money">M-Pesa</option>
+                <option value="bank">Bank Transfer</option>
+              </select>
+            </div>
+            <div>
+              <button class="button button-green full" type="submit">Record Bill Payment</button>
+            </div>
+          </form>
+        </article>
+      </div>
+
+      <article class="panel">
+        <div class="panel-head">
+          <div>
+            <h3>Bills Payable</h3>
+            <p>Unpaid or partially paid supplier invoices</p>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Supplier</th>
+                <th>Reference</th>
+                <th>Bill Amount</th>
+                <th>Paid So Far</th>
+                <th>Balance Due</th>
+                <th>Due Date</th>
+                <th>Status</th>
+                <th>Statement</th>
+              </tr>
+            </thead>
+            <tbody id="billsBody"></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 8. M-PESA STATEMENT RECONCILER             -->
+    <!-- ========================================== -->
+    <section class="page" id="page-mpesa">
+      <div class="section-intro">
+        <p class="eyebrow">KENYAN MOBILE MONEY</p>
+        <h2>M-Pesa Statement Reconciler</h2>
+        <p>Paste customer confirmation SMS or statement lines to verify and match against recorded sales.</p>
+      </div>
+      <div class="module-grid">
+        <article class="panel">
+          <h3>Parse & Import M-Pesa SMS</h3>
+          <form id="mpesaParseForm">
+            <label>Paste M-Pesa Confirmation SMS</label>
+            <textarea id="mpesaSmsInput" rows="5" placeholder="e.g. PK34TY89QR Confirmed. You have received Ksh 1,500.00 from JOHN MWANGI 0712345678 on 30/10/26 at 10:45 AM. New M-PESA balance is Ksh 12,400.00."></textarea>
+            <div class="entry-actions">
+              <button class="button button-green" type="submit">Parse M-Pesa SMS</button>
+            </div>
+          </form>
+          <div id="mpesaParseResult" class="mpesa-result-box hidden"></div>
+        </article>
+
+        <article class="panel guidance-panel">
+          <div class="guidance-icon">📱</div>
+          <h3>M-Pesa Reconciliation Flow</h3>
+          <p class="muted">When customers pay via Till, Paybill, or Send Money, match the SMS confirmation code against your sales ledger to eliminate unrecorded collections or fake SMS fraud.</p>
+          <div class="privacy-note">
+            <b>Supported SMS formats:</b>
+            <p>• Customer Paybill/Till notifications<br>• Pochi la Biashara SMS<br>• Outgoing supplier disbursements</p>
+          </div>
+        </article>
+      </div>
+
+      <article class="panel">
+        <div class="panel-head">
+          <div>
+            <h3>Imported M-Pesa Records</h3>
+            <p>All parsed mobile transactions with their matching status</p>
+          </div>
+          <button class="button button-outline" id="refreshMpesaBtn">Refresh Records</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>M-Pesa Code</th>
+                <th>Direction</th>
+                <th>Sender / Recipient</th>
+                <th>Phone</th>
+                <th>Timestamp</th>
+                <th class="right">Amount</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="mpesaTableBody">
+              <tr><td colspan="7" class="empty-cell">No M-Pesa records imported yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 9. PERFORMANCE, COGS & REPORTS             -->
+    <!-- ========================================== -->
+    <section class="page" id="page-reports">
+      <div class="section-intro section-row">
+        <div>
+          <p class="eyebrow">FINANCIAL PERFORMANCE</p>
+          <h2>Profit & Loss (P&L) with COGS</h2>
+          <p>Real-time Cost of Goods Sold (COGS), Gross Profit, Operating Expenses, and Surplus.</p>
+        </div>
+        <div class="filters">
+          <label>From: <input id="reportFrom" type="date"></label>
+          <label>To: <input id="reportTo" type="date"></label>
+          <button class="button button-green" id="runReport">Run Period Report</button>
+        </div>
+      </div>
+
+      <div id="reportCards" class="metric-grid"></div>
+
+      <!-- KRA eTIMS & TAX COMPLIANCE CARD -->
+      <article class="panel" style="margin-top:20px; border-left: 4px solid #1e5c8a;">
+        <div class="panel-head">
+          <div>
+            <h3>🇰🇪 KRA eTIMS & VAT Compliance Summary</h3>
+            <p>16% Standard VAT breakdown for the selected period</p>
+          </div>
+          <button class="button button-outline" id="loadTaxSummaryBtn">Recalculate VAT</button>
+        </div>
+        <div class="module-grid" style="margin-bottom:0;">
+          <div class="metric-card" style="padding:14px;">
+            <div class="metric-label">Taxable Sales (Net)</div>
+            <strong id="taxableSalesMetric" class="pos-num">KSh 0.00</strong>
+            <small>Gross sales less 16% VAT</small>
+          </div>
+          <div class="metric-card" style="padding:14px;">
+            <div class="metric-label">Output VAT Payable (16%)</div>
+            <strong id="vatPayableMetric" style="color:#1e5c8a;">KSh 0.00</strong>
+            <small>Total 16% VAT liability</small>
+          </div>
+        </div>
+      </article>
+
+      <article class="panel" style="margin-top:20px;">
+        <div class="panel-head">
+          <div>
+            <h3>Daily Operating Trend</h3>
+            <p>Daily breakdown of sales, cost of goods sold, and operating expenses</p>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Business Date</th>
+                <th>Transactions</th>
+                <th>Recorded Sales</th>
+                <th>Cost of Goods (COGS)</th>
+                <th>Gross Margin</th>
+                <th>Expenses</th>
+              </tr>
+            </thead>
+            <tbody id="dailyReportBody"></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 10. GENERAL LEDGER & DOUBLE-ENTRY JOURNALS -->
+    <!-- ========================================== -->
+    <section class="page" id="page-journals">
+      <div class="section-intro">
+        <p class="eyebrow">DOUBLE-ENTRY ACCOUNTING</p>
+        <h2>General Ledger & Balanced Journals</h2>
+        <p>Operational transactions automatically post balanced journal entries. You can also record manual adjusting entries.</p>
+      </div>
+
+      <article class="panel">
+        <h3>Post Manual Balanced Journal</h3>
+        <form id="journalForm">
+          <div class="two-fields">
+            <div>
+              <label>Description</label>
+              <input name="description" required placeholder="e.g. Owner capital contribution">
+            </div>
+            <div>
+              <label>Reference # / Document</label>
+              <input name="reference" placeholder="e.g. CAP-001">
+            </div>
+          </div>
+          <div class="two-fields">
+            <div>
+              <label>Business Date</label>
+              <input name="date" type="date">
+            </div>
+            <div></div>
+          </div>
+          <div class="module-grid" style="margin-top:10px;">
+            <div class="journal-box debit-box">
+              <h4 style="margin:0 0 10px; color:#2d6a4f;">Debit Side (+)</h4>
+              <label>Debit Account Code</label>
+              <input name="debit_code" value="1000" required>
+              <label>Debit Account Name</label>
+              <input name="debit_name" value="Cash in Hand" required>
+              <label>Debit Amount (KSh)</label>
+              <input name="debit" type="number" min="0.01" step="0.01" required placeholder="0.00">
+            </div>
+            <div class="journal-box credit-box">
+              <h4 style="margin:0 0 10px; color:#a93c32;">Credit Side (-)</h4>
+              <label>Credit Account Code</label>
+              <input name="credit_code" value="3000" required>
+              <label>Credit Account Name</label>
+              <input name="credit_name" value="Owner Equity / Capital" required>
+              <label>Credit Amount (KSh)</label>
+              <input name="credit" type="number" min="0.01" step="0.01" required placeholder="0.00">
+            </div>
+          </div>
+          <button class="button button-green" type="submit" style="margin-top:15px;">Post Balanced Journal Entry</button>
+        </form>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <div>
+            <h3>Posted Journal Entries</h3>
+            <p>Chronological journal ledger with balanced debits and credits</p>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Reference</th>
+                <th>Type</th>
+                <th>Debits</th>
+                <th>Credits</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="journalsBody"></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 11. CLOSE SHIFT & CASH RECONCILIATION      -->
+    <!-- ========================================== -->
+    <section class="page" id="page-reconcile">
+      <div class="section-intro">
+        <p class="eyebrow">STOKA CASH RECONCILIATION</p>
+        <h2>Close Current Shift</h2>
+        <p>Count the physical cash in the counter drawer. The system computes expected cash and confirms if your drawer is balanced.</p>
+      </div>
+
+      <div class="stoka-shift-container">
+        <!-- STOKA INSPIRED CARD (SCREENSHOT 4) -->
+        <article class="panel stoka-card">
+          <div class="stoka-line">
+            <span>TOTAL SALES</span>
+            <b id="stokaTotalSales">KSh 0.00 <small id="stokaSalesCount">(0 transactions)</small></b>
+          </div>
+          <div class="stoka-line">
+            <span>M-PESA RECEIVED</span>
+            <b id="stokaMpesaReceived">KSh 0.00</b>
+          </div>
+          <div class="stoka-line">
+            <span>CASH SALES</span>
+            <b id="stokaCashSales">KSh 0.00</b>
+          </div>
+          <div class="stoka-line">
+            <span>OPENING COUNTER FLOAT</span>
+            <b id="stokaOpeningFloat">KSh 0.00</b>
+          </div>
+          <div class="stoka-line highlight-expected">
+            <span>EXPECTED IN COUNTER</span>
+            <b id="stokaExpectedCounter">KSh 0.00</b>
+          </div>
+
+          <form id="reconcileForm" class="stoka-count-form">
+            <label for="countedCash" class="stoka-input-label">CASH IN THE COUNTER</label>
+            <div class="stoka-input-group">
+              <span class="currency-prefix">Ksh</span>
+              <input id="countedCash" inputmode="decimal" placeholder="0.00" required autofocus>
+            </div>
+
+            <!-- DYNAMIC COMPARISON BOX -->
+            <div class="stoka-comparison-box">
+              <div class="comp-line">
+                <span>EXPECTED</span>
+                <span id="compExpected">KSh 0.00</span>
+              </div>
+              <div class="comp-line">
+                <span>YOU COUNTED</span>
+                <span id="compCounted">KSh 0.00</span>
+              </div>
+              <div id="stokaBalancedBadge" class="stoka-badge hidden">
+                ✓ Balanced
+              </div>
+              <div id="stokaDiscrepancyBadge" class="stoka-badge discrepancy hidden">
+                Difference: <span id="stokaDiffAmount">KSh 0.00</span>
+              </div>
+            </div>
+
+            <label for="reconcileNotes" style="font-size:11px; margin-top:12px;">Shift Notes (Optional)</label>
+            <textarea id="reconcileNotes" rows="2" placeholder="e.g. End of morning shift, float left intact"></textarea>
+
+            <button class="button button-green full stoka-submit-btn" type="submit">
+              Close Shift ✓
+            </button>
+          </form>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <div>
+              <h3>Reconciliation History</h3>
+              <p>Previously closed shift counts and drawer balances</p>
+            </div>
+          </div>
+          <div id="reconcileHistory" class="activity-list">
+            <div class="empty-state">No previous shift records.</div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 12. SHOP SETTINGS & BACKUP/RESTORE         -->
+    <!-- ========================================== -->
+    <section class="page" id="page-settings">
+      <div class="section-intro">
+        <p class="eyebrow">CONFIGURATION</p>
+        <h2>Shop Settings & Secure Backup</h2>
+        <p>Manage shop identity, local AI model runtime, and encrypted data backups.</p>
+      </div>
+
+      <div class="module-grid">
+        <article class="panel">
+          <h3>Shop Details & Default Float</h3>
+          <form id="settingsForm">
+            <label for="shopName">Shop Name</label>
+            <input id="shopName" maxlength="120" required>
+            <label for="openingCash">Default Opening Float (KSh)</label>
+            <input id="openingCash" inputmode="decimal" required>
+            <p class="field-help">This float starts each new morning shift drawer.</p>
+            <label>Currency</label>
+            <input value="Kenyan Shilling (KES)" disabled>
+            <label>Timezone</label>
+            <input value="Africa/Nairobi (EAT, UTC+3)" disabled>
+            <button class="button button-green" type="submit">Save Shop Settings</button>
+          </form>
+
+          <div class="settings-divider"></div>
+          <h3>Local AI Runtime Status</h3>
+          <div id="qvacSettingsStatus" class="model-status"></div>
+          <button class="button button-outline" id="loadModelBtn">Load Local QVAC Model</button>
+        </article>
+
+        <!-- BACKUP & RESTORE PANEL (ROADMAP ITEM 3) -->
+        <article class="panel">
+          <h3>Data Safety & Portability</h3>
+          <p class="muted">Your shop database is stored locally in SQLite. Back up regularly or restore on a new machine.</p>
+
+          <div class="backup-box">
+            <h4>Sample Workspace / Demo Mode</h4>
+            <p class="field-help">Load 8 standard Kenyan shop products, sample customers and suppliers to test or demonstrate the desk.</p>
+            <button class="button button-outline full" id="seedDemoBtn">🌱 Load Sample Kenyan Duka Data</button>
+          </div>
+
+          <div class="backup-box" style="margin-top:16px;">
+            <h4>Staff Security & PIN Access</h4>
+            <p class="field-help">Owner PIN restricts settings, journals, P&L reports and transaction reversals.</p>
+            <div class="two-fields">
+              <input type="password" id="oldPinInput" placeholder="Current PIN (default 1234)" maxlength="8">
+              <input type="password" id="newPinInput" placeholder="New PIN (4-8 digits)" maxlength="8">
+            </div>
+            <button class="button button-outline full" id="changePinBtn" style="margin-top:8px;">Update Owner PIN</button>
+          </div>
+
+          <div class="backup-box" style="margin-top:16px;">
+            <h4>Export Plain JSON Backup</h4>
+            <a class="button button-outline full" href="/api/backup">↓ Download Full Backup (.json)</a>
+          </div>
+
+          <div class="backup-box" style="margin-top:16px;">
+            <h4>Export Encrypted Backup (AES-256-GCM)</h4>
+            <div class="two-fields">
+              <input type="password" id="encExportPass" placeholder="Enter encryption passphrase (min 6 chars)">
+              <button class="button button-outline" id="encExportBtn">Download Encrypted Backup</button>
+            </div>
+          </div>
+
+          <div class="backup-box" style="margin-top:16px;">
+            <h4>Restore Database from Backup</h4>
+            <p class="field-help" style="color:#a93c32;">⚠️ Restoring replaces current shop records with the backup file.</p>
+            <input type="file" id="restoreFileInput" accept=".json">
+            <div id="restorePassWrap" class="hidden" style="margin-top:10px;">
+              <input type="password" id="restorePassInput" placeholder="Enter passphrase to decrypt file">
+            </div>
+            <button class="button button-dark full" id="restoreExecuteBtn" style="margin-top:10px;" disabled>
+              Restore Database
+            </button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <footer>
+      <span>DukaSauti <b>·</b> Local-First Shopkeeper's Desk & POS</span>
+      <span>AI interprets. Business logic verifies. The owner decides.</span>
+    </footer>
+  </main>
+
+  <!-- ========================================== -->
+  <!-- MODALS & DIALOGS                           -->
+  <!-- ========================================== -->
+
+  <!-- QUICK ENTRY MODAL (CASHCAPTAIN STYLE) -->
+  <dialog id="quickEntryDialog">
+    <div class="dialog-head">
+      <div>
+        <p class="eyebrow">QUICK RECORD</p>
+        <h2>⚡ Quick Entry</h2>
+      </div>
+      <button class="icon-button" id="closeQuickEntryBtn" aria-label="Close">×</button>
+    </div>
+    <form id="quickEntryForm">
+      <label>Describe in plain words</label>
+      <input id="quickNoteInput" placeholder="e.g. -1500 transport or +4500 flour sale via mpesa" required autofocus>
+      <div id="quickParsedPreview" class="quick-parsed-card hidden">
+        <div class="quick-preview-badge" id="quickPreviewType">Expense</div>
+        <div class="quick-preview-amount" id="quickPreviewAmount">KSh 0.00</div>
+        <div class="quick-preview-details" id="quickPreviewDetails">Category: Other · Tender: Cash</div>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="button button-outline" id="cancelQuickEntryBtn">Cancel</button>
+        <button type="submit" class="button button-green">Confirm & Save ➔</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- MANUAL TRANSACTION MODAL -->
+  <dialog id="manualDialog">
+    <form id="manualForm" method="dialog">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">MANUAL ENTRY</p>
+          <h2>Record Shop Activity</h2>
+        </div>
+        <button class="icon-button" value="cancel" aria-label="Close">×</button>
+      </div>
+      <label for="manualType">Transaction Type</label>
+      <select id="manualType" required>
+        <option value="sale">Sale</option>
+        <option value="expense">Operating Expense</option>
+        <option value="stock_purchase">Stock Purchase / Restock</option>
+        <option value="customer_payment">Customer Repayment</option>
+        <option value="supplier_payment">Supplier Payment</option>
+        <option value="cash_withdrawal">Cash Withdrawal</option>
+        <option value="cash_deposit">Cash Deposit</option>
+        <option value="refund">Refund</option>
+        <option value="adjustment">Adjustment</option>
+      </select>
+
+      <div id="manualCategoryWrap">
+        <label for="manualCategory">Expense Category</label>
+        <select id="manualCategory">
+          <option value="other">General / Other</option>
+          <option value="rent">Rent</option>
+          <option value="transport">Transport / Delivery</option>
+          <option value="utilities">Utilities (Tokens / Water)</option>
+          <option value="wages">Wages / Labour</option>
+          <option value="inventory">Inventory Restock</option>
+        </select>
+      </div>
+
+      <label for="manualDescription">Description</label>
+      <input id="manualDescription" maxlength="500" required placeholder="e.g. Purchased cleaning supplies">
+
+      <label for="manualAmount">Amount (KSh)</label>
+      <input id="manualAmount" inputmode="decimal" required placeholder="0.00">
+
+      <label for="manualPayment">Payment Method</label>
+      <select id="manualPayment">
+        <option value="cash">Cash</option>
+        <option value="mobile_money">M-Pesa</option>
+        <option value="bank">Bank</option>
+        <option value="credit">Credit (Deni)</option>
+      </select>
+
+      <div id="manualSaleAllocation" class="two-fields hidden">
+        <div>
+          <label for="manualCashReceived">Cash (KSh)</label>
+          <input id="manualCashReceived" inputmode="decimal" placeholder="0.00">
+        </div>
+        <div>
+          <label for="manualMobile">M-Pesa (KSh)</label>
+          <input id="manualMobile" inputmode="decimal" placeholder="0.00">
+        </div>
+        <div>
+          <label for="manualBank">Bank (KSh)</label>
+          <input id="manualBank" inputmode="decimal" placeholder="0.00">
+        </div>
+        <div>
+          <label for="manualCredit">Credit (KSh)</label>
+          <input id="manualCredit" inputmode="decimal" placeholder="0.00">
+        </div>
+      </div>
+
+      <label for="manualDate">Business Date</label>
+      <input id="manualDate" type="date" required>
+      <label for="manualNotes">Notes (Optional)</label>
+      <textarea id="manualNotes" rows="2"></textarea>
+
+      <div class="dialog-actions">
+        <button class="button button-outline" value="cancel">Cancel</button>
+        <button class="button button-green" id="saveManualBtn" type="submit">Save Confirmed Record</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- THERMAL RECEIPT PRINT MODAL -->
+  <dialog id="receiptDialog">
+    <div class="dialog-head">
+      <div>
+        <p class="eyebrow">CUSTOMER RECEIPT</p>
+        <h2>Sales Receipt</h2>
+      </div>
+      <button class="icon-button" id="closeReceiptBtn" aria-label="Close">×</button>
+    </div>
+    <div class="thermal-receipt-preview" id="thermalReceiptContent">
+      <pre id="receiptPre"></pre>
+    </div>
+    <div class="dialog-actions">
+      <button class="button button-outline" id="dismissReceiptBtn">Close</button>
+      <button class="button button-green" id="printReceiptBtn">🖨️ Print Receipt</button>
+    </div>
+  </dialog>
+
+  <!-- PRINTABLE STATEMENT MODAL -->
+  <dialog id="statementDialog">
+    <div class="dialog-head">
+      <div>
+        <p class="eyebrow">OFFICIAL STATEMENT</p>
+        <h2 id="statementTitle">Statement of Account</h2>
+      </div>
+      <button class="icon-button" id="closeStatementBtn" aria-label="Close">×</button>
+    </div>
+    <div class="thermal-receipt-preview" id="statementContent">
+      <pre id="statementPre"></pre>
+    </div>
+    <div class="dialog-actions">
+      <button class="button button-outline" id="dismissStatementBtn">Close</button>
+      <button class="button button-green" id="printStatementBtn">🖨️ Print Statement</button>
+    </div>
+  </dialog>
+
+  <!-- STAFF PIN UNLOCK MODAL -->
+  <dialog id="pinDialog">
+    <div class="dialog-head">
+      <div>
+        <p class="eyebrow">SECURITY CHECK</p>
+        <h2>Enter Owner PIN</h2>
+      </div>
+      <button class="icon-button" id="closePinDialogBtn" aria-label="Close">×</button>
+    </div>
+    <form id="pinUnlockForm">
+      <p class="field-help">Protected area. Enter owner PIN (Default: <code>1234</code>) to unlock owner management.</p>
+      <input type="password" id="pinCodeInput" maxlength="8" placeholder="••••" required autofocus style="font-size:24px; text-align:center; letter-spacing:8px;">
+      <div class="dialog-actions" style="margin-top:20px;">
+        <button type="button" class="button button-outline" id="cancelPinBtn">Cancel</button>
+        <button type="submit" class="button button-green">Unlock Desk</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="/app.js" type="module"></script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+{
+  "name": "dukasauti",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Offline-first shop records assistant powered by local QVAC inference",
+  "type": "module",
+  "engines": {
+    "node": ">=22.21.0"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test",
+    "qvac:proof": "node scripts/qvac-proof.js",
+    "check": "node --check src/server.js && node --check src/db.js && node --check src/domain.js && node --check src/business.js && node --check src/qvac.js && node --check public/app.js && node --test",
+    "desktop": "electron .",
+    "build:desktop": "electron-builder --linux AppImage"
+  },
+  "dependencies": {
+    "@qvac/sdk": "^0.22.0"
+  },
+  "main": "desktop.cjs",
+  "devDependencies": {
+    "electron": "^39.0.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "ke.dukasauti.app",
+    "productName": "DukaSauti",
+    "files": [
+      "desktop.cjs",
+      "src/**/*",
+      "public/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Office"
+    }
+  }
+}
