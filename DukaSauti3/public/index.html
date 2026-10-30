@@ -210,16 +210,28 @@
 
             <!-- PAYMENT SPLIT ALLOCATION -->
             <div class="tender-section">
-              <label class="tender-title">Payment Tender Allocation</label>
+              <label class="tender-title">Payment Method / Split Tender</label>
               <div class="tender-quick-buttons">
-                <button type="button" class="chip" id="exactCashBtn">Exact Cash</button>
-                <button type="button" class="chip" id="exactMpesaBtn">Exact M-Pesa</button>
-                <button type="button" class="chip" id="halfSplitBtn">50/50 Cash & M-Pesa</button>
+                <button type="button" class="chip" id="exactCashBtn">💵 Exact Cash</button>
+                <button type="button" class="chip" id="exactMpesaBtn">📱 Exact M-Pesa</button>
+                <button type="button" class="chip" id="halfSplitBtn">⚖️ 50/50 Split</button>
+                <button type="button" class="chip" id="fullCreditBtn">💳 Put on Deni</button>
+              </div>
+
+              <div class="tender-notes-buttons">
+                <span class="tender-notes-label">Quick Cash Notes Tendered:</span>
+                <div class="tender-notes-row">
+                  <button type="button" class="chip-note" data-tender-note="50">+50</button>
+                  <button type="button" class="chip-note" data-tender-note="100">+100</button>
+                  <button type="button" class="chip-note" data-tender-note="200">+200</button>
+                  <button type="button" class="chip-note" data-tender-note="500">+500</button>
+                  <button type="button" class="chip-note" data-tender-note="1000">+1,000</button>
+                </div>
               </div>
 
               <div class="tender-grid">
                 <div>
-                  <label for="posCash">💵 Cash</label>
+                  <label for="posCash">💵 Cash Tendered</label>
                   <input type="number" id="posCash" min="0" step="0.01" value="0">
                 </div>
                 <div>
@@ -244,8 +256,13 @@
                 <small id="customerCreditNotice" class="field-help"></small>
               </div>
 
+              <div id="posChangeDueCard" class="pos-change-card hidden">
+                <span class="change-label">CHANGE TO RETURN:</span>
+                <strong id="posChangeDueAmount" class="change-amount">KSh 0.00</strong>
+              </div>
+
               <div class="tender-balance-check" id="tenderBalanceCheck">
-                <span>Remaining to Allocate:</span>
+                <span id="tenderStatusLabel">Payment Status:</span>
                 <b id="tenderRemainingAmount">KSh 0.00</b>
               </div>
             </div>
@@ -942,6 +959,39 @@
               </div>
               <div id="stokaDiscrepancyBadge" class="stoka-badge discrepancy hidden">
                 Difference: <span id="stokaDiffAmount">KSh 0.00</span>
+              </div>
+            </div>
+
+            <div style="margin-top:8px; text-align:right;">
+              <button type="button" class="text-button" id="toggleDenomBtn" style="font-size:11px; font-weight:700;">🔢 Banknotes Breakdown / Hesabu ya Noti ▾</button>
+            </div>
+
+            <div id="denomCalcPanel" class="denom-calc-panel hidden">
+              <div class="denom-grid">
+                <div class="denom-item">
+                  <label>1,000 ×</label>
+                  <input type="number" id="denom1000" min="0" step="1" placeholder="0">
+                </div>
+                <div class="denom-item">
+                  <label>500 ×</label>
+                  <input type="number" id="denom500" min="0" step="1" placeholder="0">
+                </div>
+                <div class="denom-item">
+                  <label>200 ×</label>
+                  <input type="number" id="denom200" min="0" step="1" placeholder="0">
+                </div>
+                <div class="denom-item">
+                  <label>100 ×</label>
+                  <input type="number" id="denom100" min="0" step="1" placeholder="0">
+                </div>
+                <div class="denom-item">
+                  <label>50 ×</label>
+                  <input type="number" id="denom50" min="0" step="1" placeholder="0">
+                </div>
+                <div class="denom-item">
+                  <label>Coins (KSh)</label>
+                  <input type="number" id="denomCoins" min="0" step="1" placeholder="0">
+                </div>
               </div>
             </div>
 

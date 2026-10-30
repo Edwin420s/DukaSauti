@@ -200,19 +200,23 @@ function renderPosCatalog() {
     return;
   }
 
-  $('#posProductGrid').innerHTML = filtered.map(p => `
-    <article class="pos-item-card ${p.stock_qty <= p.reorder_level ? 'low-stock-card' : ''}" data-pos-product="${escapeHtml(p.id)}">
+  $('#posProductGrid').innerHTML = filtered.map(p => {
+    const isOutOfStock = p.stock_qty <= 0;
+    const isLowStock = !isOutOfStock && p.stock_qty <= p.reorder_level;
+    return `
+    <article class="pos-item-card ${isOutOfStock ? 'out-of-stock-card' : (isLowStock ? 'low-stock-card' : '')}" data-pos-product="${escapeHtml(p.id)}">
       <div class="pos-card-head">
         <b>${escapeHtml(p.name)}</b>
         <span class="pos-card-unit">${escapeHtml(p.unit)}</span>
       </div>
       <div class="pos-card-price">${money(p.selling_price_minor)}</div>
       <div class="pos-card-stock">
-        ${p.stock_qty <= p.reorder_level ? '⚠️ Low Stock: ' : 'On hand: '}
+        ${isOutOfStock ? '<span class="out-of-stock-badge">Out of Stock</span>' : (isLowStock ? '⚠️ Low Stock: ' : 'On hand: ')}
         <b>${p.stock_qty}</b>
       </div>
     </article>
-  `).join('');
+    `;
+  }).join('');
 
   $$('.pos-item-card').forEach(card => {
     card.addEventListener('click', () => {
@@ -336,18 +340,49 @@ function renderCart() {
 }
 
 function updateTenderBalance(totalMinor) {
-  const cash = amountToMinor($('#posCash').value || 0);
+  const cashTendered = amountToMinor($('#posCash').value || 0);
   const mpesa = amountToMinor($('#posMpesa').value || 0);
   const bank = amountToMinor($('#posBank').value || 0);
   const credit = amountToMinor($('#posCredit').value || 0);
-  const allocated = cash + mpesa + bank + credit;
-  const remaining = totalMinor - allocated;
+
+  const nonCash = mpesa + bank + credit;
+  const cashNeeded = Math.max(0, totalMinor - nonCash);
+
+  let cashAllocated = 0;
+  let changeDue = 0;
+  let remaining = 0;
+
+  if (cashTendered >= cashNeeded) {
+    cashAllocated = cashNeeded;
+    changeDue = cashTendered - cashNeeded;
+    remaining = 0;
+  } else {
+    cashAllocated = cashTendered;
+    changeDue = 0;
+    remaining = cashNeeded - cashTendered;
+  }
+
+  state.lastTender = { cashTendered, cashAllocated, changeDue, mpesa, bank, credit };
 
   const remEl = $('#tenderRemainingAmount');
+  const changeCard = $('#posChangeDueCard');
+  const changeEl = $('#posChangeDueAmount');
   const btn = $('#completeCheckoutBtn');
 
-  remEl.textContent = money(remaining);
-  remEl.className = remaining === 0 ? 'tender-balanced' : 'tender-mismatched';
+  if (changeDue > 0) {
+    if (changeCard) changeCard.classList.remove('hidden');
+    if (changeEl) changeEl.textContent = money(changeDue);
+    remEl.textContent = `Fully Paid (Change: ${money(changeDue)})`;
+    remEl.className = 'tender-balanced';
+  } else if (remaining === 0 && totalMinor > 0) {
+    if (changeCard) changeCard.classList.add('hidden');
+    remEl.textContent = 'Fully Paid';
+    remEl.className = 'tender-balanced';
+  } else {
+    if (changeCard) changeCard.classList.add('hidden');
+    remEl.textContent = money(remaining);
+    remEl.className = remaining === 0 ? 'tender-balanced' : 'tender-mismatched';
+  }
 
   // Toggle customer credit picker if credit > 0
   $('#posCustomerSelectWrap').classList.toggle('hidden', credit <= 0);
@@ -414,6 +449,32 @@ $('#halfSplitBtn').addEventListener('click', () => {
   updateTenderBalance(totalMinor);
 });
 
+$('#fullCreditBtn')?.addEventListener('click', () => {
+  const totalMinor = state.cart.reduce((sum, it) => sum + Math.round(it.quantity * it.unit_price_minor), 0);
+  $('#posCash').value = '0';
+  $('#posMpesa').value = '0';
+  $('#posBank').value = '0';
+  $('#posCredit').value = (totalMinor / 100).toFixed(2);
+  updateTenderBalance(totalMinor);
+  $('#posCustomer')?.focus();
+});
+
+// Quick banknotes buttons
+$$('[data-tender-note]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const noteVal = Number(btn.dataset.tenderNote);
+    const curr = parseFloat($('#posCash').value || 0);
+    const totalMinor = state.cart.reduce((sum, it) => sum + Math.round(it.quantity * it.unit_price_minor), 0);
+    const totalKES = totalMinor / 100;
+    if (curr === 0 || Math.abs(curr - totalKES) < 0.01) {
+      $('#posCash').value = noteVal.toFixed(2);
+    } else {
+      $('#posCash').value = (curr + noteVal).toFixed(2);
+    }
+    updateTenderBalance(totalMinor);
+  });
+});
+
 $('#clearCartBtn').addEventListener('click', () => {
   if (!state.cart.length) return;
   if (confirm('Clear all items from the current cart?')) {
@@ -436,9 +497,12 @@ $('#completeCheckoutBtn').addEventListener('click', async () => {
       unit_price_minor: it.unit_price_minor
     }));
 
+    const cashAllocated = state.lastTender ? state.lastTender.cashAllocated : amountToMinor($('#posCash').value || 0);
+    const changeDue = state.lastTender ? state.lastTender.changeDue : 0;
+
     const payload = {
       lines,
-      cash_received_minor: amountToMinor($('#posCash').value || 0),
+      cash_received_minor: cashAllocated,
       mobile_money_received_minor: amountToMinor($('#posMpesa').value || 0),
       bank_received_minor: amountToMinor($('#posBank').value || 0),
       credit_amount_minor: amountToMinor($('#posCredit').value || 0),
@@ -447,17 +511,25 @@ $('#completeCheckoutBtn').addEventListener('click', async () => {
     };
 
     const res = await api('/api/sales', { method: 'POST', body: JSON.stringify(payload) });
-    showNotice(`Sale confirmed: ${money(res.transaction.amount_minor)}. Stock & balances updated!`);
+    const changeMsg = changeDue > 0 ? ` · Change Given: ${money(changeDue)}` : '';
+    showNotice(`Sale confirmed: ${money(res.transaction.amount_minor)}${changeMsg}! Stock & balances updated.`);
 
     // Reset cart
     state.cart = [];
+    state.lastTender = null;
     renderCart();
 
-    // Refresh products and dashboard
-    await Promise.all([loadInventory(), refreshDashboard(), loadCustomers()]);
+    // Show thermal receipt
+    try {
+      const receiptRes = await api(`/api/transactions/${res.transaction.id}/receipt`);
+      let receiptText = receiptRes.text;
+      if (changeDue > 0) {
+        receiptText = receiptText.replace('Ahsante kwa Kazi Yako Karibu Tena!', `Change Given: ${money(changeDue)}\n======================================\n   Ahsante kwa Kazi Yako Karibu Tena!`);
+      }
+      openReceiptModal(receiptText);
+    } catch {}
 
-    // Open receipt modal
-    openReceiptModal(res.transaction.id);
+    await Promise.all([loadInventory(), refreshDashboard(), loadCustomers()]);
   } catch (err) {
     showNotice(`Checkout failed: ${err.message}`, 'error');
   } finally {
@@ -561,7 +633,7 @@ $('#countedCash').addEventListener('input', () => {
   const discBadge = $('#stokaDiscrepancyBadge');
   const diffAmount = $('#stokaDiffAmount');
 
-  if (diff === 0 && countedMinor > 0) {
+  if (diff === 0 && $('#countedCash').value.trim() !== '') {
     balBadge.classList.remove('hidden');
     discBadge.classList.add('hidden');
   } else if ($('#countedCash').value.trim() !== '') {
@@ -572,6 +644,28 @@ $('#countedCash').addEventListener('input', () => {
     balBadge.classList.add('hidden');
     discBadge.classList.add('hidden');
   }
+});
+
+$('#toggleDenomBtn')?.addEventListener('click', () => {
+  $('#denomCalcPanel')?.classList.toggle('hidden');
+});
+
+function updateDenomTotal() {
+  const n1000 = Number($('#denom1000')?.value || 0) * 1000;
+  const n500 = Number($('#denom500')?.value || 0) * 500;
+  const n200 = Number($('#denom200')?.value || 0) * 200;
+  const n100 = Number($('#denom100')?.value || 0) * 100;
+  const n50 = Number($('#denom50')?.value || 0) * 50;
+  const coins = Number($('#denomCoins')?.value || 0);
+  const total = n1000 + n500 + n200 + n100 + n50 + coins;
+  if (total > 0) {
+    $('#countedCash').value = total.toFixed(2);
+    $('#countedCash').dispatchEvent(new Event('input'));
+  }
+}
+
+['#denom1000', '#denom500', '#denom200', '#denom100', '#denom50', '#denomCoins'].forEach(id => {
+  $(id)?.addEventListener('input', updateDenomTotal);
 });
 
 $('#reconcileForm').addEventListener('submit', async (e) => {
@@ -854,12 +948,27 @@ async function loadCustomers() {
       <td>${money(c.credit_limit_minor)}</td>
       <td><b class="${c.balance_minor > 0 ? 'neg-num' : ''}">${money(c.balance_minor)}</b></td>
       <td><span class="status-tag ${c.balance_minor > 0 ? 'reversed' : 'confirmed'}">${c.balance_minor > 0 ? 'Owes Money' : 'Settled'}</span></td>
-      <td><button class="row-action" data-customer-stmt="${escapeHtml(c.id)}">Statement</button></td>
+      <td>
+        <button class="row-action" data-customer-stmt="${escapeHtml(c.id)}">Statement</button>
+        ${c.balance_minor > 0 ? `<button class="row-action-green" data-customer-pay="${escapeHtml(c.id)}">Pay Debt</button>` : ''}
+      </td>
     </tr>
   `).join('') : '<tr><td colspan="6" class="empty-cell">No customer records yet.</td></tr>';
 
   $$('[data-customer-stmt]').forEach(btn => btn.addEventListener('click', async () => {
     openStatementModal(`/api/customers/${btn.dataset.customerStmt}/statement`, 'Customer Account Statement');
+  }));
+
+  $$('[data-customer-pay]').forEach(btn => btn.addEventListener('click', () => {
+    const cid = btn.dataset.customerPay;
+    const cust = state.customers.find(c => c.id === cid);
+    if (cust) {
+      $('#creditCustomer').value = cid;
+      $('#creditForm [name=amount]').value = (cust.balance_minor / 100).toFixed(2);
+      $('#creditForm [name=entry_type]').value = 'repayment';
+      $('#creditForm [name=amount]').focus();
+      $('#creditForm').scrollIntoView({ behavior: 'smooth' });
+    }
   }));
 
   $('#creditCustomer').innerHTML = rows.map(c => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.name)} (${money(c.balance_minor)} balance)</option>`).join('');
@@ -933,12 +1042,31 @@ async function loadSuppliers() {
       <td><b class="${b.balance_minor > 0 ? 'neg-num' : ''}">${money(b.balance_minor)}</b></td>
       <td>${escapeHtml(b.due_date || '—')}</td>
       <td><span class="status-tag ${b.balance_minor === 0 ? 'confirmed' : 'reversed'}">${b.balance_minor === 0 ? 'Paid' : 'Unpaid'}</span></td>
-      <td><button class="row-action" data-supplier-stmt="${escapeHtml(b.supplier_id)}">Statement</button></td>
+      <td>
+        <button class="row-action" data-supplier-stmt="${escapeHtml(b.supplier_id)}">Statement</button>
+        ${b.balance_minor > 0 ? `<button class="row-action-green" data-bill-pay="${escapeHtml(b.id)}">Pay Bill</button>` : ''}
+      </td>
     </tr>
   `).join('') : '<tr><td colspan="8" class="empty-cell">No supplier bills recorded.</td></tr>';
 
   $$('[data-supplier-stmt]').forEach(btn => btn.addEventListener('click', async () => {
     openStatementModal(`/api/suppliers/${btn.dataset.supplierStmt}/statement`, 'Supplier Account Statement');
+  }));
+
+  $$('[data-bill-pay]').forEach(btn => btn.addEventListener('click', () => {
+    const bid = btn.dataset.billPay;
+    $('#billPaymentSelect').value = bid;
+    const bill = bills.find(b => b.id === bid);
+    if (bill) {
+      const remainingVal = (bill.balance_minor / 100).toFixed(2);
+      const payInp = document.querySelector('#billPaymentForm [name=amount]');
+      if (payInp) {
+        payInp.value = remainingVal;
+        payInp.focus();
+      }
+    }
+    const payForm = $('#billPaymentForm') || document.querySelector('#billPaymentSelect')?.closest('form');
+    if (payForm) payForm.scrollIntoView({ behavior: 'smooth' });
   }));
 }
 

@@ -292,6 +292,8 @@ kbd { background: #e3ebd8; border-radius: 4px; padding: 2px 6px; font-size: 10px
 }
 .pos-item-card:hover { border-color: #4e9967; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.04); }
 .low-stock-card { border-left: 4px solid var(--amber); }
+.out-of-stock-card { opacity: 0.65; background: #fdfaf9; border-left: 4px solid #a93c32; }
+.out-of-stock-badge { font-size: 9px; font-weight: 700; color: #a93c32; background: #fbeee9; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 4px; }
 .pos-card-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
 .pos-card-head b { font-size: 13px; color: #1f3026; }
 .pos-card-unit { font-size: 10px; color: var(--muted); background: #f1f4ee; padding: 2px 6px; border-radius: 4px; }
@@ -339,8 +341,56 @@ kbd { background: #e3ebd8; border-radius: 4px; padding: 2px 6px; font-size: 10px
 
 .tender-section { background: #f8faf6; border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin-bottom: 14px; }
 .tender-title { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; display: block; }
-.tender-quick-buttons { display: flex; gap: 6px; margin-bottom: 10px; }
-.tender-quick-buttons .chip { font-size: 10px; padding: 4px 8px; }
+.tender-quick-buttons { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+.tender-quick-buttons .chip { font-size: 11px; padding: 5px 9px; cursor: pointer; border: 1px solid #d4ded1; background: #fff; border-radius: 6px; }
+.tender-quick-buttons .chip:hover { background: #eaf2e8; border-color: #216d44; }
+
+.tender-notes-buttons { margin-bottom: 10px; }
+.tender-notes-label { display: block; font-size: 10px; font-weight: 700; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; }
+.tender-notes-row { display: flex; gap: 5px; flex-wrap: wrap; }
+.chip-note { font-size: 11px; font-weight: 700; color: #1e4a33; background: #e9f4eb; border: 1px solid #bedbc3; border-radius: 6px; padding: 4px 8px; cursor: pointer; }
+.chip-note:hover { background: #d7edd9; border-color: #1e4a33; transform: translateY(-1px); }
+
+.pos-change-card {
+  background: #eaf6ec;
+  border: 1px solid #c0e3c8;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.change-label { font-size: 11px; font-weight: 800; color: #1f6139; }
+.change-amount { font-size: 16px; font-weight: 900; color: #14522c; }
+
+.row-action-green {
+  border: 1px solid #3c825a;
+  background: #eaf5ee;
+  color: #1a5734;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-left: 4px;
+}
+.row-action-green:hover { background: #d5edd9; }
+
+.denom-calc-panel {
+  background: #f4f3ec;
+  border: 1px solid #e0ddd0;
+  border-radius: 10px;
+  padding: 12px;
+  margin: 12px 0;
+}
+.denom-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.denom-item label { font-size: 10px; font-weight: 700; color: #5c5545; margin-bottom: 2px; }
+.denom-item input { font-size: 12px; padding: 6px; border-radius: 6px; border: 1px solid #dcd7c9; text-align: center; }
 
 .tender-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .tender-grid label { font-size: 10px; font-weight: 700; color: #4b5d52; margin-bottom: 4px; display: block; }
