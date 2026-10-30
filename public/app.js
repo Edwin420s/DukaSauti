@@ -520,14 +520,7 @@ $('#completeCheckoutBtn').addEventListener('click', async () => {
     renderCart();
 
     // Show thermal receipt
-    try {
-      const receiptRes = await api(`/api/transactions/${res.transaction.id}/receipt`);
-      let receiptText = receiptRes.text;
-      if (changeDue > 0) {
-        receiptText = receiptText.replace('Ahsante kwa Kazi Yako Karibu Tena!', `Change Given: ${money(changeDue)}\n======================================\n   Ahsante kwa Kazi Yako Karibu Tena!`);
-      }
-      openReceiptModal(receiptText);
-    } catch {}
+    openReceiptModal(res.transaction.id, changeDue);
 
     await Promise.all([loadInventory(), refreshDashboard(), loadCustomers()]);
   } catch (err) {
@@ -575,10 +568,19 @@ $('#posCategoryFilter').addEventListener('change', renderPosCatalog);
 // RECEIPT PRINTING MODAL
 // ==========================================
 const receiptDialog = $('#receiptDialog');
-async function openReceiptModal(transactionId) {
+async function openReceiptModal(target, changeDue = 0) {
   try {
-    const data = await api(`/api/transactions/${transactionId}/receipt`);
-    $('#receiptPre').textContent = data.text;
+    if (typeof target === 'string' && (target.includes('\n') || target.includes('RECEIPT'))) {
+      $('#receiptPre').textContent = target;
+      receiptDialog.showModal();
+      return;
+    }
+    const data = await api(`/api/transactions/${target}/receipt`);
+    let text = data.text;
+    if (changeDue > 0) {
+      text = text.replace('Ahsante kwa Kazi Yako Karibu Tena!', `Change Given: ${money(changeDue)}\n======================================\n   Ahsante kwa Kazi Yako Karibu Tena!`);
+    }
+    $('#receiptPre').textContent = text;
     receiptDialog.showModal();
   } catch (e) {
     showNotice(`Could not generate receipt: ${e.message}`, 'error');

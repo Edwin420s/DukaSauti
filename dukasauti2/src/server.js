@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import { openDatabase, audit } from './db.js';
-import { validateProposal, computeDailySummary, cashExpected, formatReceipt } from './domain.js';
+import { validateProposal, computeDailySummary, cashExpected, formatReceipt, parseTransactionNote } from './domain.js';
 import { QvacService } from './qvac.js';
 import { handleBusinessApi, postAutoJournal } from './business.js';
 
@@ -113,8 +113,19 @@ const server = http.createServer(async (req, res) => {
       const b = await bodyJson(req);
       if (typeof b.note !== 'string' || !b.note.trim()) return send(res, 400, { error: 'Enter a business note.' });
       if (b.note.length > 5000) return send(res, 400, { error: 'Note is too long (maximum 5,000 characters).' });
-      const result = await qvac.extract(b.note);
-      result.events = result.events.map(e => validateProposal(e));
+
+      let result;
+      if (qvac.ready) {
+        try {
+          result = await qvac.extract(b.note);
+        } catch {
+          result = parseTransactionNote(b.note);
+        }
+      } else {
+        result = parseTransactionNote(b.note);
+      }
+
+      result.events = (result.events || []).map(e => validateProposal(e));
       result.events = result.events.map(e => ({ ...e, status: 'draft' }));
       return send(res, 200, result);
     }

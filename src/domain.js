@@ -150,6 +150,8 @@ export function parseSimpleNote(note, today = new Date().toISOString().slice(0, 
   };
 }
 
+export const parseTransactionNote = parseSimpleNote;
+
 /**
  * Safaricom M-Pesa SMS / Statement Parser
  * Parses incoming and outgoing Kenyan M-Pesa messages
